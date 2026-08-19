@@ -26,14 +26,14 @@ type Mention struct {
 }
 
 type Note struct {
-	ID           int64     `json:"id"`
-	DashboardUID string    `json:"-"`
-	OrgID        int64     `json:"-"`
-	AuthorID     int64     `json:"authorId"`
-	AuthorLogin  string    `json:"authorLogin"`
-	Text         string    `json:"text"`
+	ID           int64     `json:"id" xorm:"id"`
+	DashboardUID string    `json:"-" xorm:"dashboard_uid"`
+	OrgID        int64     `json:"-" xorm:"org_id"`
+	AuthorID     int64     `json:"authorId" xorm:"author_id"`
+	AuthorLogin  string    `json:"authorLogin" xorm:"author_login"`
+	Text         string    `json:"text" xorm:"text"`
 	HTML         string    `json:"html"`
-	CreatedAt    time.Time `json:"createdAt"`
+	CreatedAt    time.Time `json:"createdAt" xorm:"created_at"`
 	Mentions     []Mention `json:"mentions"`
 }
 
