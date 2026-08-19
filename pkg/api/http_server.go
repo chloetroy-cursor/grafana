@@ -70,6 +70,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/encryption"
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/folder"
+	"github.com/grafana/grafana/pkg/services/handoffnotes"
 	"github.com/grafana/grafana/pkg/services/hooks"
 	"github.com/grafana/grafana/pkg/services/libraryelements"
 	"github.com/grafana/grafana/pkg/services/librarypanels"
@@ -184,6 +185,7 @@ type HTTPServer struct {
 	authInfoService              login.AuthInfoService
 	NotificationService          notifications.Service
 	DashboardService             dashboards.DashboardService
+	handoffNotesService          *handoffnotes.Service
 	dashboardProvisioningService dashboards.DashboardProvisioningService
 	folderService                folder.Service
 	dsGuardian                   guardian.DatasourceGuardianProvider
@@ -262,6 +264,7 @@ func ProvideHTTPServer(opts ServerOptions, cfg *setting.Cfg, routeRegister routi
 	serviceaccountsService serviceaccounts.Service, pluginAssets *pluginassets.Service,
 	authInfoService login.AuthInfoService,
 	notificationService notifications.Service, dashboardService dashboards.DashboardService,
+	handoffNotesService *handoffnotes.Service,
 	dashboardProvisioningService dashboards.DashboardProvisioningService, folderService folder.Service,
 	dsGuardian guardian.DatasourceGuardianProvider,
 	dashboardsnapshotsService dashboardsnapshots.Service, pluginSettings pluginSettings.Service,
@@ -346,6 +349,7 @@ func ProvideHTTPServer(opts ServerOptions, cfg *setting.Cfg, routeRegister routi
 		authInfoService:              authInfoService,
 		NotificationService:          notificationService,
 		DashboardService:             dashboardService,
+		handoffNotesService:          handoffNotesService,
 		dashboardProvisioningService: dashboardProvisioningService,
 		folderService:                folderService,
 		dsGuardian:                   dsGuardian,
