@@ -11,6 +11,7 @@ import { useSelector } from 'app/types/store';
 import { DashboardEditPaneSplitter } from '../edit-pane/DashboardEditPaneSplitter';
 import { SoloPanelContextProvider, useDefineSoloPanelContext } from '../solo/SoloPanelContext';
 
+import { DashboardHandoffNote } from './DashboardHandoffNote';
 import { type DashboardScene } from './DashboardScene';
 import { PanelSearchLayout } from './PanelSearchLayout';
 
@@ -107,6 +108,7 @@ export function DashboardSceneRenderer({ model }: SceneComponentProps<DashboardS
     <>
       {layoutOrchestrator && <layoutOrchestrator.Component model={layoutOrchestrator} />}
       <Page navModel={navModel} pageNav={pageNav} layout={PageLayoutType.Custom}>
+        {!editPanel && !viewPanel && <DashboardHandoffNote dashboard={model} />}
         {editPanel && <editPanel.Component model={editPanel} />}
         {!editPanel && (
           <DashboardEditPaneSplitter
