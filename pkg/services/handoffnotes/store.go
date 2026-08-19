@@ -21,20 +21,6 @@ func ProvideStore(database db.DB) Store {
 	return &sqlStore{db: database}
 }
 
-func (s *sqlStore) dashboardID(ctx context.Context, session *db.Session, orgID int64, uid string) (int64, error) {
-	var dashboard struct {
-		ID int64 `xorm:"id"`
-	}
-	found, err := session.Table("dashboard").Select("id").Where("org_id = ? AND uid = ?", orgID, uid).Get(&dashboard)
-	if err != nil {
-		return 0, err
-	}
-	if !found {
-		return 0, ErrDashboardNotFound
-	}
-	return dashboard.ID, nil
-}
-
 func (s *sqlStore) Create(
 	ctx context.Context,
 	orgID int64,
@@ -46,17 +32,12 @@ func (s *sqlStore) Create(
 ) (Note, error) {
 	var note storedNote
 	err := s.db.WithTransactionalDbSession(ctx, func(session *db.Session) error {
-		dashboardID, err := s.dashboardID(ctx, session, orgID, dashboardUID)
-		if err != nil {
-			return err
-		}
-
 		note = storedNote{
-			DashboardID: dashboardID,
-			OrgID:       orgID,
-			AuthorID:    authorID,
-			Text:        text,
-			CreatedAt:   createdAt,
+			DashboardUID: dashboardUID,
+			OrgID:        orgID,
+			AuthorID:     authorID,
+			Text:         text,
+			CreatedAt:    createdAt,
 		}
 		if _, err := session.Insert(&note); err != nil {
 			return err
@@ -78,32 +59,27 @@ func (s *sqlStore) Create(
 	}
 
 	return Note{
-		ID:          note.ID,
-		DashboardID: note.DashboardID,
-		OrgID:       note.OrgID,
-		AuthorID:    note.AuthorID,
-		Text:        note.Text,
-		CreatedAt:   note.CreatedAt,
-		Mentions:    mentions,
+		ID:           note.ID,
+		DashboardUID: note.DashboardUID,
+		OrgID:        note.OrgID,
+		AuthorID:     note.AuthorID,
+		Text:         note.Text,
+		CreatedAt:    note.CreatedAt,
+		Mentions:     mentions,
 	}, nil
 }
 
 func (s *sqlStore) List(ctx context.Context, orgID int64, dashboardUID string) ([]Note, error) {
 	notes := make([]Note, 0)
 	err := s.db.WithDbSession(ctx, func(session *db.Session) error {
-		dashboardID, err := s.dashboardID(ctx, session, orgID, dashboardUID)
-		if err != nil {
-			return err
-		}
-
 		userTable := s.db.Quote("user")
-		err = session.SQL(`
-			SELECT n.id, n.dashboard_id, n.org_id, n.author_id, n.text, n.created_at,
+		err := session.SQL(`
+			SELECT n.id, n.dashboard_uid, n.org_id, n.author_id, n.text, n.created_at,
 				u.login AS author_login
 			FROM dashboard_handoff_note n
 			LEFT JOIN `+userTable+` u ON u.id = n.author_id
-			WHERE n.org_id = ? AND n.dashboard_id = ?
-			ORDER BY n.created_at DESC, n.id DESC`, orgID, dashboardID).Find(&notes)
+			WHERE n.org_id = ? AND n.dashboard_uid = ?
+			ORDER BY n.created_at DESC, n.id DESC`, orgID, dashboardUID).Find(&notes)
 		if err != nil || len(notes) == 0 {
 			return err
 		}
@@ -131,12 +107,7 @@ func (s *sqlStore) List(ctx context.Context, orgID int64, dashboardUID string) (
 
 func (s *sqlStore) Delete(ctx context.Context, orgID int64, dashboardUID string, noteID int64) error {
 	return s.db.WithTransactionalDbSession(ctx, func(session *db.Session) error {
-		dashboardID, err := s.dashboardID(ctx, session, orgID, dashboardUID)
-		if err != nil {
-			return err
-		}
-
-		result, err := session.Where("id = ? AND org_id = ? AND dashboard_id = ?", noteID, orgID, dashboardID).
+		result, err := session.Where("id = ? AND org_id = ? AND dashboard_uid = ?", noteID, orgID, dashboardUID).
 			Delete(&storedNote{})
 		if err != nil {
 			return err

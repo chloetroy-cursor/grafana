@@ -95,7 +95,7 @@ func handoffNoteError(err error) response.Response {
 	switch {
 	case errors.Is(err, ErrInvalidNote):
 		return response.Error(http.StatusBadRequest, err.Error(), nil)
-	case errors.Is(err, ErrDashboardNotFound), errors.Is(err, ErrNoteNotFound):
+	case errors.Is(err, ErrNoteNotFound):
 		return response.Error(http.StatusNotFound, err.Error(), nil)
 	default:
 		return response.Error(http.StatusInternalServerError, "Handoff note operation failed", err)

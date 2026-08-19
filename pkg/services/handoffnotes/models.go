@@ -11,9 +11,8 @@ const (
 )
 
 var (
-	ErrDashboardNotFound = errors.New("dashboard not found")
-	ErrNoteNotFound      = errors.New("handoff note not found")
-	ErrInvalidNote       = errors.New("invalid handoff note")
+	ErrNoteNotFound = errors.New("handoff note not found")
+	ErrInvalidNote  = errors.New("invalid handoff note")
 )
 
 type CreateNoteCommand struct {
@@ -27,24 +26,24 @@ type Mention struct {
 }
 
 type Note struct {
-	ID          int64     `json:"id"`
-	DashboardID int64     `json:"-"`
-	OrgID       int64     `json:"-"`
-	AuthorID    int64     `json:"authorId"`
-	AuthorLogin string    `json:"authorLogin"`
-	Text        string    `json:"text"`
-	HTML        string    `json:"html"`
-	CreatedAt   time.Time `json:"createdAt"`
-	Mentions    []Mention `json:"mentions"`
+	ID           int64     `json:"id"`
+	DashboardUID string    `json:"-"`
+	OrgID        int64     `json:"-"`
+	AuthorID     int64     `json:"authorId"`
+	AuthorLogin  string    `json:"authorLogin"`
+	Text         string    `json:"text"`
+	HTML         string    `json:"html"`
+	CreatedAt    time.Time `json:"createdAt"`
+	Mentions     []Mention `json:"mentions"`
 }
 
 type storedNote struct {
-	ID          int64     `xorm:"pk autoincr 'id'"`
-	DashboardID int64     `xorm:"dashboard_id"`
-	OrgID       int64     `xorm:"org_id"`
-	AuthorID    int64     `xorm:"author_id"`
-	Text        string    `xorm:"text"`
-	CreatedAt   time.Time `xorm:"created_at"`
+	ID           int64     `xorm:"pk autoincr 'id'"`
+	DashboardUID string    `xorm:"dashboard_uid"`
+	OrgID        int64     `xorm:"org_id"`
+	AuthorID     int64     `xorm:"author_id"`
+	Text         string    `xorm:"text"`
+	CreatedAt    time.Time `xorm:"created_at"`
 }
 
 func (storedNote) TableName() string {

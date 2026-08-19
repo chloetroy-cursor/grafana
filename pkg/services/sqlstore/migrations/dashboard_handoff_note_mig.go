@@ -9,14 +9,14 @@ func addDashboardHandoffNoteMigrations(mg *Migrator) {
 		Name: "dashboard_handoff_note",
 		Columns: []*Column{
 			{Name: "id", Type: DB_BigInt, IsPrimaryKey: true, IsAutoIncrement: true},
-			{Name: "dashboard_id", Type: DB_BigInt, Nullable: false},
+			{Name: "dashboard_uid", Type: DB_NVarchar, Length: 40, Nullable: false},
 			{Name: "org_id", Type: DB_BigInt, Nullable: false},
 			{Name: "author_id", Type: DB_BigInt, Nullable: false},
 			{Name: "text", Type: DB_Text, Nullable: false},
 			{Name: "created_at", Type: DB_DateTime, Nullable: false},
 		},
 		Indices: []*Index{
-			{Cols: []string{"org_id", "dashboard_id", "created_at"}},
+			{Cols: []string{"org_id", "dashboard_uid", "created_at"}},
 		},
 	}
 
