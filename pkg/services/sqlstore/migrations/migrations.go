@@ -75,6 +75,7 @@ func (oss *OSSMigrations) AddMigration(mg *Migrator) {
 	addCorrelationsMigrations(mg)
 
 	addPublicDashboardMigration(mg)
+	addDashboardHandoffNoteMigrations(mg)
 	addDbFileStorageMigration(mg)
 
 	accesscontrol.AddManagedPermissionsMigration(mg, accesscontrol.ManagedPermissionsMigrationID)
