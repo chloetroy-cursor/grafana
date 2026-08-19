@@ -1,6 +1,5 @@
-import { useState } from 'react';
-
 import { css } from '@emotion/css';
+import { useState } from 'react';
 
 import { dateTime, type GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';

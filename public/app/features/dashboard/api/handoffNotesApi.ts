@@ -18,7 +18,7 @@ export interface DashboardHandoffNote {
 export const handoffNotesApi = legacyAPI.enhanceEndpoints({ addTagTypes: ['DashboardHandoffNotes'] }).injectEndpoints({
   endpoints: (builder) => ({
     getDashboardHandoffNotes: builder.query<DashboardHandoffNote[], string>({
-      query: (dashboardUid) => `/dashboards/uid/${dashboardUid}/handoff-notes`,
+      query: (dashboardUid) => ({ url: `/dashboards/uid/${dashboardUid}/handoff-notes` }),
       providesTags: (_result, _error, dashboardUid) => [{ type: 'DashboardHandoffNotes', id: dashboardUid }],
     }),
     createDashboardHandoffNote: builder.mutation<

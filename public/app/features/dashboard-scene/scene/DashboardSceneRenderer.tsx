@@ -11,8 +11,8 @@ import { useSelector } from 'app/types/store';
 import { DashboardEditPaneSplitter } from '../edit-pane/DashboardEditPaneSplitter';
 import { SoloPanelContextProvider, useDefineSoloPanelContext } from '../solo/SoloPanelContext';
 
-import { type DashboardScene } from './DashboardScene';
 import { DashboardHandoffNote } from './DashboardHandoffNote';
+import { type DashboardScene } from './DashboardScene';
 import { PanelSearchLayout } from './PanelSearchLayout';
 
 export function DashboardSceneRenderer({ model }: SceneComponentProps<DashboardScene>) {
