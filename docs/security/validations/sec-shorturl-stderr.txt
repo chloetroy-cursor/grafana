@@ -1,0 +1,2 @@
+FAIL: shorturl list is DecisionAllow for any authenticated resource request; org-wide short URL enumeration is permitted
+exit status 1

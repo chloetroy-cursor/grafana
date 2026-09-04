@@ -1,0 +1,23 @@
+# Independent verifier rerun (security-verifier)
+# Revision: 6ae568f9389b851e15cd1ce849d93ebae22b578a
+# Date: 2026-09-04
+
+## Exact command
+
+export PATH="/home/ubuntu/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.4.linux-amd64/bin:$PATH"
+export GOTOOLCHAIN=local
+cd /tmp/sec-shorturl
+go run .
+
+## stdout
+
+list decision=Allow reason=""
+
+## stderr
+
+FAIL: shorturl list is DecisionAllow for any authenticated resource request; org-wide short URL enumeration is permitted
+exit status 1
+
+## exit code
+
+1
