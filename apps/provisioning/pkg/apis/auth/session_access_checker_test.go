@@ -148,6 +148,44 @@ func TestSessionAccessChecker_NoRequester(t *testing.T) {
 	assert.True(t, apierrors.IsUnauthorized(err), "expected Unauthorized error")
 }
 
+// Folder-scoped dashboard/folder checks used by DualReadWriter.Read must not
+// use a Viewer (or Editor) org-role fallback. When the inner AccessClient
+// correctly denies a restricted folder, falling back to "caller is at least
+// Viewer" re-allows every signed-in user and defeats folder ACLs.
+func TestSessionAccessChecker_ViewerFallbackMustNotOverrideFolderDenial(t *testing.T) {
+	ctx := identity.WithRequester(context.Background(), &mockRequester{
+		orgRole:      identity.RoleViewer,
+		identityType: authlib.TypeUser,
+		namespace:    "default",
+	})
+	folderScoped := authlib.CheckRequest{
+		Verb:      "get",
+		Group:     "dashboard.grafana.app",
+		Resource:  "dashboards",
+		Name:      "secret-dash",
+		Namespace: "default",
+	}
+
+	t.Run("viewer fallback re-allows after folder ACL denial (unsafe for files GET)", func(t *testing.T) {
+		checker := NewSessionAccessChecker(&mockInnerAccessChecker{
+			response: authlib.CheckResponse{Allowed: false},
+		}).WithFallbackRole(identity.RoleViewer)
+
+		err := checker.Check(ctx, folderScoped, "restricted-folder")
+		require.NoError(t, err, "Viewer fallback incorrectly turns folder ACL denial into allow")
+	})
+
+	t.Run("no fallback keeps folder ACL denial (required for files GET)", func(t *testing.T) {
+		checker := NewSessionAccessChecker(&mockInnerAccessChecker{
+			response: authlib.CheckResponse{Allowed: false},
+		})
+
+		err := checker.Check(ctx, folderScoped, "restricted-folder")
+		require.Error(t, err)
+		assert.True(t, apierrors.IsForbidden(err))
+	})
+}
+
 func TestSessionAccessChecker_WithFallbackRole_ImmutableOriginal(t *testing.T) {
 	mock := &mockInnerAccessChecker{
 		response: authlib.CheckResponse{Allowed: false},
