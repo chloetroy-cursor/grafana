@@ -253,10 +253,11 @@ spec:
 		},
 	}
 
-	t.Run("reads folder metadata from target ref", func(t *testing.T) {
+	t.Run("reads folder metadata from configured branch even when file ref differs", func(t *testing.T) {
 		reader := repository.NewMockReader(t)
 		reader.On("Config").Return(repoConfig).Maybe()
-		reader.On("Read", mock.Anything, "team-a/_folder.json", "feature-branch").
+		// Must NOT consult the caller-supplied ref for folder UID resolution.
+		reader.On("Read", mock.Anything, "team-a/_folder.json", "").
 			Return(&repository.FileInfo{Data: []byte(folderMetadataJSON), Hash: "h1"}, nil)
 
 		p := &parser{
@@ -276,13 +277,13 @@ spec:
 		require.Equal(t, "stable-uid", parsed.Meta.GetFolder())
 	})
 
-	t.Run("falls back to configured branch when target ref not found", func(t *testing.T) {
+	t.Run("ignores spoofed folder UID on caller-supplied ref", func(t *testing.T) {
+		restrictedOnMain := `{"apiVersion":"folder.grafana.app/v1beta1","kind":"Folder","metadata":{"name":"restricted-folder-uid"},"spec":{"title":"Restricted"}}`
+		// A malicious branch would present an open-folder UID; parser must not use it.
 		reader := repository.NewMockReader(t)
 		reader.On("Config").Return(repoConfig).Maybe()
-		reader.On("Read", mock.Anything, "team-a/_folder.json", "new-pr-branch").
-			Return(nil, fmt.Errorf("ref not found: refs/heads/new-pr-branch: %w", repository.ErrRefNotFound))
 		reader.On("Read", mock.Anything, "team-a/_folder.json", "").
-			Return(&repository.FileInfo{Data: []byte(folderMetadataJSON), Hash: "h1"}, nil)
+			Return(&repository.FileInfo{Data: []byte(restrictedOnMain), Hash: "h-main"}, nil)
 
 		p := &parser{
 			repo:                  provisioning.ResourceRepositoryInfo{Type: provisioning.GitHubRepositoryType, Namespace: "xxx", Name: "repo"},
@@ -294,19 +295,17 @@ spec:
 
 		parsed, err := p.Parse(context.Background(), &repository.FileInfo{
 			Path: "team-a/dashboard.json",
-			Ref:  "new-pr-branch",
+			Ref:  "evil-branch",
 			Data: []byte(dashboardYAML),
 		})
 		require.NoError(t, err)
-		require.Equal(t, "stable-uid", parsed.Meta.GetFolder(),
-			"should use stable UID from configured branch when PR branch doesn't exist")
+		require.Equal(t, "restricted-folder-uid", parsed.Meta.GetFolder(),
+			"folder ACL checks must use the configured-branch UID, not a spoofed ref")
 	})
 
-	t.Run("falls back to hash-based ID when both refs lack metadata", func(t *testing.T) {
+	t.Run("falls back to hash-based ID when configured branch lacks metadata", func(t *testing.T) {
 		reader := repository.NewMockReader(t)
 		reader.On("Config").Return(repoConfig).Maybe()
-		reader.On("Read", mock.Anything, "team-a/_folder.json", "new-pr-branch").
-			Return(nil, fmt.Errorf("ref not found: refs/heads/new-pr-branch: %w", repository.ErrRefNotFound))
 		reader.On("Read", mock.Anything, "team-a/_folder.json", "").
 			Return(nil, repository.ErrFileNotFound)
 
@@ -325,7 +324,7 @@ spec:
 		})
 		require.NoError(t, err)
 		require.Equal(t, ParseFolder("team-a/", "repo").ID, parsed.Meta.GetFolder(),
-			"should fall back to hash-based folder ID when no _folder.json on any branch")
+			"should fall back to hash-based folder ID when no _folder.json on configured branch")
 	})
 
 	t.Run("does not fall back for non-ref errors", func(t *testing.T) {

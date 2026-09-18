@@ -280,15 +280,14 @@ func (r *parser) resolveFolderID(ctx context.Context, info *repository.FileInfo)
 	folderID := ParseFolder(dirPath, r.repo.Name).ID
 	// When folder metadata is enabled and the parent folder has a _folder.json,
 	// use the stable UID from that file instead of the hash-derived one.
+	//
+	// Always read from the configured branch (ref=""), never from info.Ref.
+	// Folder metadata on caller-supplied refs is user-controlled and can spoof
+	// folder UIDs so AuthorizeResource checks the wrong Grafana folder. This
+	// matches ProvisioningAuthorizer.getFolderID / AuthorizeReadRawFile.
 	if r.folderMetadataEnabled && r.reader != nil {
-		if meta, _, err := ReadFolderMetadata(ctx, r.reader, dirPath, info.Ref); err == nil && meta.Name != "" {
+		if meta, _, err := ReadFolderMetadata(ctx, r.reader, dirPath, ""); err == nil && meta.Name != "" {
 			folderID = meta.Name
-		} else if err != nil && errors.Is(err, repository.ErrRefNotFound) {
-			// Target branch doesn't exist yet (e.g. new PR branch). Fall back to
-			// the configured branch where _folder.json is already committed.
-			if meta, _, err := ReadFolderMetadata(ctx, r.reader, dirPath, ""); err == nil && meta.Name != "" {
-				folderID = meta.Name
-			}
 		}
 	}
 	return folderID
